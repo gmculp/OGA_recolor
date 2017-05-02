@@ -1,5 +1,5 @@
 # OGA_recolor
-This function re-colors images with an orange-gray-blue palette in an effort to make them more accessible to people with color vision deficiency (CVD) of either the red/green (protan, deutan) or blue/green (tritan) type.  To read more about this algorithm, please refer to my [dissertation](http://academicworks.cuny.edu/gc_etds/1243/).  
+This function re-colors images with an orange-gray-blue palette in an effort to make them more accessible to people with color vision deficiency (CVD) of either the red/green (protan, deutan) or blue/green (tritan) type.  To read more about this algorithm, please refer to my [dissertation](http://academicworks.cuny.edu/gc_etds/1243/).  An additional function is provided which uses the algorithm described in [Brettel et al. (1997)](http://vision.psychol.cam.ac.uk/jdmollon/papers/Dichromat_simulation.pdf) and [Vie´not et al. (1999)](http://vision.psychol.cam.ac.uk/jdmollon/papers/colourmaps.pdf)  to simulate the three types of CVD. 
 
 Using the function to recolor an image:
 
