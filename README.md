@@ -27,5 +27,5 @@ Using the function to recolor an image:
         img.tritan2 <- sim_img(my.image2,"tritan")
         
         ###display output###
-        grid.arrange(rasterGrob(my.image), rasterGrob(img.deutan), rasterGrob(img.protan), rasterGrob(img.tritan), rasterGrob(my.image2),               rasterGrob(img.deutan2), rasterGrob(img.protan2), rasterGrob(img.tritan2), nrow=4)
+        grid.arrange(rasterGrob(my.image), rasterGrob(img.deutan), rasterGrob(img.protan), rasterGrob(img.tritan), rasterGrob(my.image2), rasterGrob(img.deutan2), rasterGrob(img.protan2), rasterGrob(img.tritan2), nrow=4)
         ```
