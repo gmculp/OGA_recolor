@@ -4,12 +4,28 @@ This function re-colors images with an orange-gray-blue palette in an effort to 
 Using the function to recolor an image:
 
         ```R
-        #requires devtools
-        library(devtools)
-        #make sure Rtools is TRUE
-        devtools::find_rtools()
-        #install package
-        devtools::install_github("gmculp/rGBAT16AB")
-        #load package
-        library(rGBAT16AB)
+        ###load dichromat simulation functions###
+        source('BVM_recolor.R')
+        
+        ###load Orange-Gray-Azure Re-coloring algorithm###
+        source('OGA_recolor.R')
+        
+        ###load image###
+        my.image <- readPNG("candies_color.png")
+        
+        ###CVD simulation of original image###
+        img.deutan <- sim_img(my.image,"deutan")
+        img.protan <- sim_img(my.image,"protan")
+        img.tritan <- sim_img(my.image,"tritan")
+
+        ###re-color image###
+        my.image2 <- OGA_recolor_image(my.image)
+        
+        ###CVD simulation of re-colored image###
+        img.deutan2 <- sim_img(my.image2,"deutan")
+        img.protan2 <- sim_img(my.image2,"protan")
+        img.tritan2 <- sim_img(my.image2,"tritan")
+        
+        ###display output###
+        grid.arrange(rasterGrob(my.image), rasterGrob(img.deutan), rasterGrob(img.protan), rasterGrob(img.tritan), rasterGrob(my.image2),               rasterGrob(img.deutan2), rasterGrob(img.protan2), rasterGrob(img.tritan2), nrow=4)
         ```
