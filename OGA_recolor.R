@@ -112,7 +112,7 @@ seg.df$b <- seg.df$y2 - (seg.df$m * seg.df$x2)
 ###some functions###
 ####################
 
-Y <- function(R,G,B) {
+calc_Y <- function(R,G,B) {
 	(R * Y_r) + (G * Y_g) + (B * Y_b)
 }
 
@@ -178,7 +178,7 @@ OGA_recolor <- function (test.dt) {
 	test.dt[ , in_g2 := green ^ gamma]
 	test.dt[ , in_b2 := blue ^ gamma]
 	
-	test.dt[ , Y_chan := Y(in_r2,in_g2,in_b2)]
+	test.dt[ , Y_chan := calc_Y(in_r2,in_g2,in_b2)]
 	
 	test.dt[ , in_rgb2 := in_r2 + in_g2 + in_b2]
 	
@@ -261,11 +261,11 @@ OGA_recolor <- function (test.dt) {
 	
 	test.dt[ , pt_d :=  pmin(pt1_d,pt2_d,ptu_d)]
 	
-	test.dt[ , new_red :=  prop_chan(new_rr2,Y_chan,Y(new_rr2, new_gg2, new_bb2))]
+	test.dt[ , new_red :=  prop_chan(new_rr2,Y_chan,calc_Y(new_rr2, new_gg2, new_bb2))]
 	
-	test.dt[ , new_green :=  prop_chan(new_gg2,Y_chan,Y(new_rr2, new_gg2, new_bb2))]
+	test.dt[ , new_green :=  prop_chan(new_gg2,Y_chan,calc_Y(new_rr2, new_gg2, new_bb2))]
 
-	test.dt[ , new_blue :=  prop_chan(new_bb2,Y_chan,Y(new_rr2, new_gg2, new_bb2))]
+	test.dt[ , new_blue :=  prop_chan(new_bb2,Y_chan,calc_Y(new_rr2, new_gg2, new_bb2))]
 	
 	test.dt <- test.dt[test.dt[, .I[which.min(pt_d)], by = pix_id]$V1]
 	
@@ -349,4 +349,28 @@ OGA_recolor_image <- function(img) {
 	
 	return(img.new)
 	invisible(gc())
+}
+
+OGA_recolor_hex_palette <- function(in_vec) {
+	pal.dt <- OGA_recolor(data.table(t(col2rgb(in_vec))/255))
+	return(rgb(pal.dt$new_red,pal.dt$new_green,pal.dt$new_blue))
+}
+
+hex2rbY <- function(in_vec) {
+
+	temp.df <- data.frame(t(col2rgb(in_vec))/255)
+	temp.df$hex <- in_vec
+	temp.df$r2 <- temp.df$red ^ gamma
+	temp.df$g2 <- temp.df$green ^ gamma
+	temp.df$b2 <- temp.df$blue ^ gamma
+	temp.df$Y <- calc_Y(temp.df$r2,temp.df$g2,temp.df$b2)
+	
+	temp.df$rgb2 <- temp.df$r2 + temp.df$g2 + temp.df$b2
+	
+	temp.df$rr <- chan_func(temp.df$r2,temp.df$rgb2)
+	
+	temp.df$bb <- chan_func(temp.df$b2,temp.df$rgb2)
+	
+	return(temp.df[,c("hex","rr","bb","Y")])
+	
 }
