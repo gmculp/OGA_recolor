@@ -1,113 +1,78 @@
+
+###DISABLE SCIENTIFIC NOTATION###
+options(scipen = 999)
+
 ############################
 ###load required packages###
 ############################
-library("png")	
-library("jpeg")		
-library("grid")
-library("gridExtra")
-library(data.table)
+suppressMessages(library(data.table))
 
 
 ####################
 ###some constants###
 ####################
 
+###gamma value###
 gamma <- 2.4
 
+###sRGB to XYZ matrix Y column values for ref. white D65###
 Y_r <- 0.2126
 
 Y_g <- 0.7152
 
 Y_b <- 0.0722
 
+###white point###
 w_pt <- 1/3
 
-
-###################################
-###generate line segment look-up###
-###################################
-
-##################################
-###old option for opponent pair###
-##################################
-
-###b_fac <- 0.6
-###r_fac <- 0.4 
-
-###t <- seq(0, 1, by = 0.05)
-
-###x1 <- (t^gamma)/((t^gamma) + (((r_fac*t)+(b_fac*(1-t)))^gamma) + ((1-t)^gamma)) 
-###y1 <- ((1-t)^gamma)/((t^gamma) + (((r_fac*t)+(b_fac*(1-t)))^gamma) + ((1-t)^gamma)) 
-
-###seg.df <- data.frame(x1=x1[1:length(x1)-1],y1=y1[1:length(y1)-1],x2=x1[2:length(x1)],y2=y1[2:length(y1)])
-
-###seg.df <- seg.df[order(seg.df$x1,seg.df$y1),]
-
-###seg.df$seg_id <- 1:nrow(seg.df)
-
-###seg.df$m <- (seg.df$y2-seg.df$y1)/(seg.df$x2-seg.df$x1)
-
-###seg.df$b <- seg.df$y2 - (seg.df$m * seg.df$x2)
-
-###seg.df$hue <- ifelse(round(seg.df$x1,4) > 0.3333 | round(seg.df$x2,4) > 0.3333, "orange", "azure")
-
-######################################
-###new option for non opponent pair###
-######################################
-
-t <- seq(0, 1, by = 0.1)
-
-###################
-###hue 1: bluish###
-###################
-###bluish hue's green channel = (b_fac.a*b) + (r_fac.a*r)###
+##################
+###hue 1: azure###
+##################
+###azure hue's green channel = (b_fac.a*b) + (r_fac.a*r)###
 b_fac.a <- 0.4 
 r_fac.a <- 0.6
 hue.a <- "azure"
-x.a <- (t ^ gamma) / ((t ^ gamma) + ((b_fac.a +(t*r_fac.a)) ^ gamma) + 1)
-y.a <- 1/((t ^ gamma) + ((b_fac.a + (t*r_fac.a)) ^ gamma) + 1)
-z.a <- Y_b + ((t ^ gamma) * Y_r) + (((b_fac.a +(t*r_fac.a)) ^ gamma) * Y_g) 
 
 
-####################
-###hue 2: reddish###
-####################
-###reddish hue's green channel = (b_fac.b*b) + (r_fac.b*r)###
+###################
+###hue 2: orange###
+###################
+###orange hue's green channel = (b_fac.b*b) + (r_fac.b*r)###
 b_fac.b <- 0.6
 r_fac.b <- 0.4
 hue.b <- "orange"
-x.b <- rev(1 / ((t ^ gamma) + (((t*b_fac.b)+ r_fac.b) ^ gamma) + 1))
-y.b <- rev((t ^ gamma)/((t ^ gamma) + (((t*b_fac.b) + r_fac.b) ^ gamma) + 1))
-z.b <- rev(((t ^ gamma) * Y_b) + Y_r + ((((t*b_fac.b)+ r_fac.b) ^ gamma) * Y_g))
-
-#########################
-###assemble data frame###
-#########################
-seg.df <- rbind(data.frame(x1=x.a[1:length(t)-1],
-y1=y.a[1:length(t)-1],
-z1=z.a[1:length(t)-1],
-x2=x.a[2:length(t)],
-y2=y.a[2:length(t)],
-z2=z.a[2:length(t)],
-hue=rep(hue.a,length(t)-1)),
-data.frame(x1=x.b[1:length(t)-1],
-y1=y.b[1:length(t)-1],
-z1=z.b[1:length(t)-1],
-x2=x.b[2:length(t)],
-y2=y.b[2:length(t)],
-z2=z.b[2:length(t)],
-hue=rep(hue.b,length(t)-1)))
-
-seg.df <- seg.df[order(seg.df$x1,seg.df$y1),]
-
-seg.df$seg_id <- 1:nrow(seg.df)
-
-seg.df$m <- (seg.df$y2-seg.df$y1)/(seg.df$x2-seg.df$x1)
-
-seg.df$b <- seg.df$y2 - (seg.df$m * seg.df$x2)
 
 
+##########################################
+###assemble data table of line segments###
+##########################################
 
+###sequence of 10###
+t <- seq(0, 1, by = 0.1)
+
+seg.dt <- rbindlist(list(
+data.table(
+	x1=(t ^ gamma) / ((t ^ gamma) + ((b_fac.a +(t*r_fac.a)) ^ gamma) + 1),
+	y1=1/((t ^ gamma) + ((b_fac.a + (t*r_fac.a)) ^ gamma) + 1),
+	z1=Y_b + ((t ^ gamma) * Y_r) + (((b_fac.a +(t*r_fac.a)) ^ gamma) * Y_g),
+	hue=rep(hue.a,length(t))),
+data.table(
+	x1=rev(1 / ((t ^ gamma) + (((t*b_fac.b)+ r_fac.b) ^ gamma) + 1)),
+	y1=rev((t ^ gamma)/((t ^ gamma) + (((t*b_fac.b) + r_fac.b) ^ gamma) + 1)),
+	z1=rev(((t ^ gamma) * Y_b) + Y_r + ((((t*b_fac.b)+ r_fac.b) ^ gamma) * Y_g)),
+	hue=rep(hue.b,length(t)))	
+))
+
+seg.dt[, x2 := shift(.(x1), type = "lead"), by = hue]
+seg.dt[, y2 := shift(.(y1), type = "lead"), by = hue]	
+seg.dt[, z2 := shift(.(z1), type = "lead"), by = hue]	
+seg.dt <- seg.dt[!(is.na(x2))]
+	
+seg.dt <- seg.dt[order(x1,y1),]	
+seg.dt[, seg_id := 	1:nrow(seg.dt)]
+seg.dt[, hue := NULL]
+	
+	
 ####################
 ###some functions###
 ####################
@@ -144,9 +109,10 @@ calc_pd <- function(xa,ya,xb,yb) {
 }
 
 prop_chan <- function(chan,Y1,Y2){
-	out_chan <- as.numeric((chan * (Y1/Y2)) ^ (1/gamma))
-	out_chan <- ifelse(out_chan > 1, 1, out_chan)
-	out_chan <- ifelse(out_chan < 0, 0, out_chan)
+	#out_chan <- as.numeric((chan * (Y1/Y2)) ^ (1/gamma))
+	#out_chan <- ifelse(out_chan > 1, 1, out_chan)
+	#out_chan <- ifelse(out_chan < 0, 0, out_chan)
+	out_chan <- pmin(pmax(as.numeric((chan * (Y1/Y2)) ^ (1/gamma)),0),1)
 	return(out_chan)
 }
 
@@ -156,19 +122,14 @@ cjdt <- function(a,b){
   cbind(a[cj[[1]],],b[cj[[2]],])
 }
 
-
+	
 ###############################
 ###main re-coloring function###
 ###############################
 
 OGA_recolor <- function (test.dt) {
 
-	# Start the clock!
-	ptm <- proc.time()
-	
-	#test.dt <- img.dt
-	
-	test.dt$pix_id <- 1:nrow(test.dt)
+	test.dt[ , pix_id := 1:nrow(test.dt)]
 	
 	test.dt[ , alpha := 1]
 	
@@ -186,58 +147,34 @@ OGA_recolor <- function (test.dt) {
 	
 	test.dt[ , in_bb2 := chan_func(in_b2,in_rgb2)]
 	
-	
-	
 	###many-to-many merge with line segments###
-	test.dt <- cjdt(test.dt,data.table(seg.df))
+	test.dt <- cjdt(test.dt,seg.dt)
 	
 	###remove segments that have lower lightness than pixel###
 	test.dt <- test.dt[Y_chan <= z1 | Y_chan <= z2]
 	
 	###sort by pixel id and segment id
-	test.dt <- setorder(test.dt, pix_id, seg_id)
+	setorder(test.dt, pix_id, seg_id)
 	
-	################
-	###azure line###
-	################
+	#########################################################################
+	###find point at which pixel color lightness channel intersects curves###
+	#########################################################################
 	
-	test.dt[ , pt_azr_y := ((m * Y_g) + (b * Y_g) - (b * Y_r))/((Y_chan * m) + (m * Y_g) - (m * Y_b) + Y_g - Y_r) ]
+	#test.dt[ , sux := ((Y_chan - z2)/(z1 - z2))]
 	
-	test.dt[ , pt_azr_y := ifelse(pt_azr_y > y1, y1, pt_azr_y) ]
-
-	test.dt[ , pt_azr_x := (pt_azr_y - b)/m]
-
-	#################
-	###orange line###
-	#################
+	test.dt[ , pt_x := x2 + (((Y_chan - z2)/(z1 - z2))*(x1-x2))]
+	test.dt[ , pt_y := y2 + (((Y_chan - z2)/(z1 - z2))*(y1-y2))]
 	
-	test.dt[ , pt_org_x := ((b * Y_b) + Y_g - (b * Y_g))/ ((m * Y_g) - (m * Y_b) + Y_chan + Y_g - Y_r)]
+	test.dt[ , x1 := round(ifelse(z1 < z2 & Y_chan >= z1 & Y_chan <= z2, pt_x, x1),4)]
+	test.dt[ , y1 := round(ifelse(z1 < z2 & Y_chan >= z1 & Y_chan <= z2, pt_y, y1),4)]
+	test.dt[ , x2 := round(ifelse(z1 > z2 & Y_chan >= z2 & Y_chan <= z1, pt_x, x2),4)]
+	test.dt[ , y2 := round(ifelse(z1 > z2 & Y_chan >= z2 & Y_chan <= z1, pt_y, y2),4)]
 	
-	test.dt[ , pt_org_x := ifelse(pt_org_x > x2, x2, pt_org_x)]
-
-	test.dt[ , pt_org_y := (pt_org_x * m) + b]
+	test.dt[, c("pt_x","pt_y","z1","z2"):=NULL] 
 	
-	######################################
-	###assign point values based on hue###
-	######################################
-	
-	test.dt[ , x1 := round(ifelse(hue=="azure",pt_azr_x,x1),4)]
-	
-	test.dt[ , y1 := round(ifelse(hue=="azure",pt_azr_y,y1),4)]
-	
-	test.dt[ , x2 := round(ifelse(hue !="azure",pt_org_x,x2),4)]
-	
-	test.dt[ , y2 := round(ifelse(hue !="azure",pt_org_y,y2),4)]
-	
-	test.dt[, c("pt_azr_y","pt_org_y","pt_azr_x","pt_org_x"):=NULL] 
-	
-	###remove records where point is outside range###
-	test.dt <- test.dt[x1 <= x2 & y1 >= y2]
-	
-	
-	#####################################
-	###closest point on lines to color###
-	#####################################
+	##################################################
+	###closest point on chromaticity lines to color###
+	##################################################
 	
 	test.dt[ , ptu_x := calc_ux(x1,y1,x2,y2,in_rr2,in_bb2)]
 	
@@ -271,14 +208,12 @@ OGA_recolor <- function (test.dt) {
 	
 	d_c <- colnames(test.dt)[!colnames(test.dt) %in% c("pix_id","red","green","blue","alpha","new_red","new_green","new_blue")]
 	
-	test.dt <- test.dt[, (d_c):=NULL]
+	test.dt[, (d_c):=NULL]
 	
 	###sort by pixel id
-	test.dt <- setorder(test.dt, pix_id)
+	setorder(test.dt, pix_id)
 	
 	invisible(gc())
-	
-	#cat(paste0("\n",round(as.numeric((proc.time() - ptm)[3]),2)," seconds\n"))
 	
 	return(test.dt)
 }
@@ -290,24 +225,9 @@ OGA_recolor <- function (test.dt) {
 ########################################	
 
 OGA_recolor_image <- function(img) {
-
-	#img <- readPNG("C:/Users/gmculp/Google Drive/various/gb_budgies.png")
 	
-	#img <- readPNG("J:/candies_color3.png")
-	
-	# reshape image into a data table
-	#img.dt <- data.table(
-	#	red = matrix(img[,,1], ncol=1),
-	#	green = matrix(img[,,2], ncol=1),
-	#	blue = matrix(img[,,3], ncol=1)
-	#)
-	
-	#img.dt <- data.table(
-	#	red = round(matrix(img[,,1], ncol=1),2),
-	#	green = round(matrix(img[,,2], ncol=1),2),
-	#	blue = round(matrix(img[,,3], ncol=1),2)
-	#)
-	
+	###convert matrix to data.table###
+	###round colors by 0.02###
 	img.dt <- data.table(
 		red = round(matrix(img[,,1], ncol=1)/0.02)*0.02,
 		green = round(matrix(img[,,2], ncol=1)/0.02)*0.02,
@@ -316,19 +236,21 @@ OGA_recolor_image <- function(img) {
 	
 	colnames(img.dt) <- gsub(".V1","",colnames(img.dt))
 	
-	#img.dt2 <- OGA_recolor(img.dt)
+	###run recolor algorithm on data.table of unique pixel colors###
 	img.dt2A <- OGA_recolor(unique(img.dt))
-	img.dt$pix.order <- 1:nrow(img.dt)
 	
-	#ptm <- proc.time()
-	###fast merge with data.table###
+	img.dt[,pix.order := 1:nrow(img.dt)]
+	
 	img.dt2 <- merge(img.dt,img.dt2A,by=c("red","green","blue"))
+	
 	rm(img.dt2A)
 	
 	img.dt2 <- setorder(img.dt2, pix.order)
-	#cat(paste0("\n",round(as.numeric((proc.time() - ptm)[3]),2)," seconds\n"))
 	
-
+	##################################
+	###return back to matrix format###
+	##################################
+	
 	R = matrix(as.numeric(img.dt2$new_red), nrow=dim(img)[1])
 	
 	G = matrix(as.numeric(img.dt2$new_green), nrow=dim(img)[1])
@@ -347,8 +269,10 @@ OGA_recolor_image <- function(img) {
 	
 	rm(img, img.dt, img.dt2, R, G, B)
 	
-	return(img.new)
 	invisible(gc())
+	
+	return(img.new)
+	
 }
 
 OGA_recolor_hex_palette <- function(in_vec) {
