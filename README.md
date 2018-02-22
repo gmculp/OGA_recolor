@@ -10,6 +10,14 @@ Using the R function to re-color an image:
         ###load Orange-Gray-Azure Re-coloring algorithm###
         source('OGA_recolor.R')
         
+        ############################
+	###load required packages###
+	############################
+	library("png")
+	library("jpeg")		
+	library("grid")
+	library("gridExtra")
+        
         ###load image###
         my.image <- readPNG("candies_color.png")
         
