@@ -11,11 +11,10 @@ Using the R function to re-color a palette:
         source('OGA_recolor.R')
         
         my_pal <- c("#009300","#FF7300","#6666FF","#00FF00","#FFBF33","#66D9FF")
-	oga_pal <- OGA_recolor_hex_palette(my_pal)
+        oga_pal <- OGA_recolor_hex_palette(my_pal)
 	
-	
-	pal_list <- list()
-	pal_list["normal"] <- ""
+        pal_list <- list()
+        pal_list["normal"] <- ""
 	pal_list["normal.original"] <- list(my_pal)
 	pal_list["normal.recolored"] <- list(oga_pal)
 	pal_list["protan"] <- ""
@@ -32,7 +31,8 @@ Using the R function to re-color a palette:
         nr <- length(pal_list)
 	nc <- length(my_pal)
   
-	plot(1, 1, xlim = c(0, nc), ylim = c(0, nr), type = "n", axes = FALSE, bty = "n", xlab = "", ylab = "")
+	plot(1, 1, xlim = c(0, nc), ylim = c(0, nr), type = "n", 
+	    axes = FALSE, bty = "n", xlab = "", ylab = "")
 	
 	for (i in 1:nr) {
 		
@@ -43,12 +43,17 @@ Using the R function to re-color a palette:
 		if (ni == 1) 
 			next
 		
-		rect(xleft = 0:(ni - 1), ybottom = i - 1, xright = 1:ni, ytop = i - 0.2, col = this_pal, border = "light grey")
+		rect(xleft = 0:(ni - 1), ybottom = i - 1, xright = 1:ni, 
+		    ytop = i - 0.2, col = this_pal, border = "light grey")
 	}
 	
-	text(rep(-0.1, nr), (1:nr) - 0.6, labels = ifelse(grepl("\\.",names(pal_list)),gsub("^.*\\.","",names(pal_list)),""), xpd = TRUE, adj = 1)
+	text(rep(-0.1, nr), (1:nr) - 0.6, 
+	    labels = ifelse(grepl("\\.",names(pal_list)),gsub("^.*\\.","",names(pal_list)),""), 
+	    xpd = TRUE, adj = 1)
 	
-	text(rep(nc/2, nr), (1:nr) - 0.6, labels = ifelse(grepl("\\.",names(pal_list)),"",names(pal_list)), xpd = TRUE)
+	text(rep(nc/2, nr), (1:nr) - 0.6, 
+	    labels = ifelse(grepl("\\.",names(pal_list)),"",names(pal_list)), 
+	    xpd = TRUE)
         ```
 
 
