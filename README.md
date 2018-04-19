@@ -15,46 +15,43 @@ Using the R function to re-color a palette:
 	
         pal_list <- list()
         pal_list["normal"] <- ""
-	pal_list["normal.original"] <- list(my_pal)
-	pal_list["normal.recolored"] <- list(oga_pal)
-	pal_list["protan"] <- ""
-	pal_list["protan.original"] <- list(CVD_p(my_pal))
-	pal_list["protan.recolored"] <- list(CVD_p(oga_pal))
-	pal_list["deutan"] <- ""
-	pal_list["deutan.original"] <- list(CVD_d(my_pal))
-	pal_list["deutan.recolored"] <- list(CVD_d(oga_pal))
-	pal_list["tritan"] <- ""
-	pal_list["tritan.original"] <- list(CVD_t(my_pal))
-	pal_list["tritan.recolored"] <- list(CVD_t(oga_pal))
-	pal_list <- rev(pal_list)
+        pal_list["normal.original"] <- list(my_pal)
+        pal_list["normal.recolored"] <- list(oga_pal)
+        pal_list["protan"] <- ""
+        pal_list["protan.original"] <- list(CVD_p(my_pal))
+        pal_list["protan.recolored"] <- list(CVD_p(oga_pal))
+        pal_list["deutan"] <- ""
+        pal_list["deutan.original"] <- list(CVD_d(my_pal))
+        pal_list["deutan.recolored"] <- list(CVD_d(oga_pal))
+        pal_list["tritan"] <- ""
+        pal_list["tritan.original"] <- list(CVD_t(my_pal))
+        pal_list["tritan.recolored"] <- list(CVD_t(oga_pal))
+        pal_list <- rev(pal_list)
         
         nr <- length(pal_list)
-	nc <- length(my_pal)
+        nc <- length(my_pal)
   
-	plot(1, 1, xlim = c(0, nc), ylim = c(0, nr), type = "n", 
+        plot(1, 1, xlim = c(0, nc), ylim = c(0, nr), type = "n", 
 	    axes = FALSE, bty = "n", xlab = "", ylab = "")
 	
-	for (i in 1:nr) {
+        for (i in 1:nr) {
+	        this_pal <- unlist(pal_list[i], use.names = FALSE)
+	        ni <- length(this_pal)
 		
-		this_pal <- unlist(pal_list[i], use.names = FALSE)
+              if (ni == 1) next
 		
-		ni <- length(this_pal)
-		
-		if (ni == 1) 
-			next
-		
-		rect(xleft = 0:(ni - 1), ybottom = i - 1, xright = 1:ni, 
+              rect(xleft = 0:(ni - 1), ybottom = i - 1, xright = 1:ni, 
 		    ytop = i - 0.2, col = this_pal, border = "light grey")
-	}
+       }
 	
-	text(rep(-0.1, nr), (1:nr) - 0.6, 
+       text(rep(-0.1, nr), (1:nr) - 0.6, 
 	    labels = ifelse(grepl("\\.",names(pal_list)),gsub("^.*\\.","",names(pal_list)),""), 
 	    xpd = TRUE, adj = 1)
 	
-	text(rep(nc/2, nr), (1:nr) - 0.6, 
+       text(rep(nc/2, nr), (1:nr) - 0.6, 
 	    labels = ifelse(grepl("\\.",names(pal_list)),"",names(pal_list)), 
 	    xpd = TRUE)
-        ```
+       ```
 
 
 Using the R function to re-color an image:
