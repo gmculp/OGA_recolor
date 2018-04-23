@@ -256,7 +256,7 @@ OGA_recolor_image <- function(img) {
     blue = round(matrix(img[,,3], ncol=1)/0.02)*0.02
   )
   
-  colnames(img.dt) <- gsub(".V1","",colnames(img.dt))
+  setnames(img.dt, gsub(".V1","",colnames(img.dt)))
   
   ###run recolor algorithm on data.table of unique pixel colors###
   img.dt2A <- OGA_recolor(unique(img.dt))
