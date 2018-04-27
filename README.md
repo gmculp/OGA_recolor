@@ -10,7 +10,7 @@ Using the R function to re-color a palette:
        ###display original and re-colored palettes along with CVD simulations###
 
        ###good use case for use of re-coloring algorithm###
-       ###input palette = palette composed of CVD inaccessible color pairs###
+       ###input palette contains CVD inaccessible color pairs###
        my_palette <- c("#009300","#FF7300","#6666FF","#00FF00","#FFBF33","#66D9FF")
        OGA_palette_compare(my_palette)
 
@@ -18,7 +18,7 @@ Using the R function to re-color a palette:
        oga_pal <- OGA_recolor_hex_palette(my_palette)
 
        ###bad use case for use of re-coloring algorithm###
-       ###input palette = ColorBrewer PRGn palette which is already CVD accessible###
+       ###input palette (in this case, the ColorBrewer PRGn palette) is already CVD accessible###
        my_palette <- c("#762A83","#AF8DC3","#E7D4E8","#D9F0D3","#7FBF7B","#1B7837")
        OGA_palette_compare(my_palette)
        ```
@@ -30,17 +30,17 @@ Using the R function to re-color an image:
         ###load Orange-Gray-Azure Re-coloring algorithm visualization functions###
        source('OGA_visualize.R')
         
-        ###good use case for use of re-coloring algorithm###
-       ###input image = palette composed of CVD inaccessible color pairs###
+       ###good use case for use of re-coloring algorithm###
+       ###input image contains CVD inaccessible color pairs###
        my.image <- readPNG("candies_color.png")
        OGA_image_compare(my.image)
 
-       ###get re-colored palette###
+       ###get re-colored image###
        oga_image <- OGA_recolor_hex_palette(my_palette)
        writePNG(oga_image,"oga_image.png")
 
        ###bad use case for use of re-coloring algorithm###
-       ###input image = image which is already CVD accessible###
+       ###input image is already CVD accessible###
        my.image <- readJPEG("Magenta_flower.JPG")
        OGA_image_compare(my.image)
         ```
