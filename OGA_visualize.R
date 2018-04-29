@@ -13,7 +13,8 @@ library("grid")
 library("gridExtra")
     
 ###################################################################################	
-###function to display original and re-colored images along with CVD simulations### 	###################################################################################
+###function to display original and re-colored images along with CVD simulations### 	
+###################################################################################
 
 OGA_image_compare <- function(in_image)	{	
 	
