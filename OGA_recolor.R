@@ -1,5 +1,4 @@
 
-
 ###DISABLE SCIENTIFIC NOTATION###
 options(scipen = 999)
 
@@ -100,56 +99,41 @@ cjdt <- function(a,b){
 ###assemble data table of line segments###
 ##########################################
 
-make_segments <- function(r,g,b){
+func_rr.a <- function(t) inter_calc1(t)/(inter_calc1(t)+inter_calc1((0.6*t)+0.4)+inter_calc1(1))
+func_bb.a <- function(t) inter_calc1(1)/(inter_calc1(t)+inter_calc1((0.6*t)+0.4)+inter_calc1(1))
+func_Y.a <- function(t) (Y_r * (inter_calc1(t))) + (Y_g * (inter_calc1((0.6*t)+0.4))) + (Y_b * (inter_calc1(1)))
 
-	#r <- 1; g <- 0.4; b <- 0
-	#r <- 0; g <- 0.4; b <- 1
+func_rr.o <- function(t) inter_calc1(1)/(inter_calc1(t)+inter_calc1((0.6*t)+0.4)+inter_calc1(1))
+func_bb.o <- function(t) inter_calc1(t)/(inter_calc1(t)+inter_calc1((0.6*t)+0.4)+inter_calc1(1))
+func_Y.o <- function(t) (Y_r * (inter_calc1(1))) + (Y_g * (inter_calc1((0.6*t)+0.4))) + (Y_b * (inter_calc1(t)))
 
-	val.v <- c(r,g,b)
-	name.v <- c('r','g','b')
-	
-	###check for corner colors###
-	min.c <- name.v[which( round(val.v,2) == min(round(val.v,2)))]
-	max.c <- name.v[which( round(val.v,2) == max(round(val.v,2)))]
-	max.c <- max.c[!(max.c %in% min.c)] #for white
-	mid.c <- name.v[!(name.v %in% min.c) & !(name.v %in% max.c)]
-	
-	
-	###sequence of 10###
-	t <- seq(0, 1, by = seg_fac)
 
-	rgb.list <- append(setNames(lapply(min.c,function(x) t),min.c), setNames(lapply(max.c,function(x) rep(1,length(t))),max.c))
-	
-	if(length(mid.c)==1){
-	
-		f1 <- (val.v[name.v == mid.c] - val.v[name.v == max.c])/(val.v[name.v == min.c] - val.v[name.v == max.c])
-		f2 <- 1 - f1
-		
-		rgb.list <- append(rgb.list,setNames(lapply(mid.c,function(x) (t*f1)+f2),mid.c))
-	}
-		
-	rgb.dt <- as.data.table(rgb.list)	
-	setcolorder(rgb.dt, c("r","g","b"))	
-		
-	rgb.dt[, rr.2 := inter_calc1(r)/(inter_calc1(r)+inter_calc1(g)+inter_calc1(b))]
-	rgb.dt[, bb.2 := inter_calc1(b)/(inter_calc1(r)+inter_calc1(g)+inter_calc1(b))]
-	rgb.dt[, Y.2 := calc_Y(inter_calc1(r),inter_calc1(g),inter_calc1(b))]
-	
-	rgb.dt[, c('r','g','b') := NULL]
-	
-	rgb.dt[, rr.1 := shift(.(rr.2), type = "lag")]
-	rgb.dt[, bb.1 := shift(.(bb.2), type = "lag")]	
-	rgb.dt[, Y.1 := shift(.(Y.2), type = "lag")]	
-	
-	###add line for below saturated color###
-	rgb.dt[, rr.1 := ifelse(is.na(rr.1),rr.2,rr.1)]
-	rgb.dt[, bb.1 := ifelse(is.na(bb.1),bb.2,bb.1)]
-	rgb.dt[, Y.1 := ifelse(is.na(Y.1),0,Y.1)]
-
-	return(rgb.dt)
+make_segments <- function(t,func_rr,func_bb,func_Y){
+	dt.seg <- data.table(t.2=t,rr.2=func_rr(t),bb.2=func_bb(t),Y.2=func_Y(t))
+	dt.seg[, t.1 := shift(.(t.2), type = "lag")]
+	dt.seg[, rr.1 := shift(.(rr.2), type = "lag")]
+	dt.seg[, bb.1 := shift(.(bb.2), type = "lag")]	
+	dt.seg[, Y.1 := shift(.(Y.2), type = "lag")]	
+	dt.seg <- dt.seg[!(is.na(rr.1))]
+	return(dt.seg)
 }
 
+###select points that are equidistant###
+opt_make_segments <- function(seg_num, func_rr, func_bb, func_Y){
+	t <- seq(0,1,by=0.001)
+	dt.seg <- make_segments(t,func_rr,func_bb,func_Y)
+	dt.seg[, dist := (((rr.2-rr.1)^2) + ((bb.2-bb.1)^2) + ((Y.2-Y.1)^2)) ^ (1/2)]
+	dt.seg[, dist_cumsum := cumsum(dist)]
+	div_pt <- sum(dt.seg$dist)/seg_num
+	t_pix <- rbindlist(lapply(1:(seg_num-1), function(i) dt.seg[which.min(abs(dist_cumsum - (div_pt*i)))]))$t.2
+	dt.seg <- make_segments(c(0,t_pix,1),func_rr,func_bb,func_Y)
+	return(dt.seg)
+}
 
+###construct segment look-up table###
+nn <- 10
+seg.dt <- rbindlist(list(opt_make_segments(nn,func_rr.o,func_bb.o,func_Y.o),opt_make_segments(nn,func_rr.a,func_bb.a,func_Y.a)))
+#seg.dt <- rbindlist(list(make_segments(seq(0,1,by=(1/nn)),func_rr.o,func_bb.o,func_Y.o),make_segments(seq(0,1,by=(1/nn)),func_rr.a,func_bb.a,func_Y.a)))
 
 ###############################
 ###main re-coloring function###
@@ -175,9 +159,6 @@ OGA_recolor <- function (test.dt) {
   test.dt[ , in.bb := chan_func(in.b2,in.rgb2)]
   
   test.dt[, c("in.r2","in.g2","in.b2","in.rgb2"):=NULL]
-  
-  ###construct segment look-up table###
-  seg.dt <- rbindlist(list(make_segments(o_r,o_g,o_b),make_segments(a_r,a_g,a_b)))
   
   ###many-to-many merge with line segments###
   test.dt <- cjdt(test.dt,seg.dt)
